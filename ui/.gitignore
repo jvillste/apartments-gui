@@ -1,0 +1,10 @@
+/.lein-repl-history
+/.nrepl-port
+/figwheel_server.log
+/out/cljs/core.cljs
+/.DS_Store
+/target
+/out
+/resources/public/css/compiled
+/resources/public/js/compiled
+.DS_Store
