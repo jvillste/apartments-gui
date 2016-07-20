@@ -28,7 +28,8 @@
                                 read-string
                                 handle-post
                                 pr-str))
-  
+  (route/resources "/")
+
   (route/not-found "Not Found"))
 
 (def app (cors/wrap-cors app-routes

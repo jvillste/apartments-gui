@@ -12,8 +12,8 @@
 
 ;; generic server communication
 
-(goog-define file-url "http://localhost:4001/file")
-(goog-define api-url "http://localhost:4001/api")
+(goog-define file-url "http://localhost:4011/file")
+(goog-define api-url "http://localhost:4011/api")
 
 (defn call-to-chan [body]
   (let [channel (async/chan)]

@@ -6,10 +6,10 @@
 
 (defonce state (atom {}))
 
-
+(def state-file-name "apartments.edn")
 
 (defn save-state []
-  (spit "state.edn"
+  (spit state-file-name
         (pr-str @state)))
 
 (defonce save-channel (let [channel (async/chan)
@@ -32,7 +32,7 @@
   @state)
 
 (defn load-state []
-  (reset! state (read-string (slurp "state.edn"))))
+  (reset! state (read-string (slurp state-file-name))))
 
 (defn refresh-ids []
   (let [ids (apartments/get-all-etuovi-lot-ids "tulokset?haku=M132770175")]
