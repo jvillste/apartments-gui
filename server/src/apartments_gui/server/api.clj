@@ -28,15 +28,15 @@
   (async/put! save-channel 1))
 
 
-(defn get-state []
+(defn ^:cor/api get-state []
   @state)
 
 (defn load-state []
   (reset! state (read-string (slurp state-file-name))))
 
-(defn refresh-ids []
-  (let [ids (apartments/get-all-etuovi-lot-ids "tulokset?haku=M132770175")]
-    (swap! state assoc :ids (apartments/get-all-etuovi-lot-ids "tulokset?haku=M132770175"))
+(defn ^:cor/api refresh-ids []
+  (let [ids (apartments/get-all-etuovi-lot-ids (:etuovi-query-url @state))]
+    (swap! state assoc :ids ids)
     (doseq [id ids]
       (if (not (get-in @state [:data id]))
         (do (println "getting data for " id)
@@ -47,15 +47,9 @@
     (schedule-state-save))
   @state)
 
-(defn set-comment [id comment]
-  (swap! state assoc-in [:comments id] comment)
-  (schedule-state-save)
-  nil)
-
-(defn set-possible [id comment]
-  (swap! state assoc-in [:possible id] comment)
+(defn ^:cor/api assoc-in-state [path value]
+  (swap! state assoc-in path value)
   (schedule-state-save)
   nil)
 
 
-#_ (apartments/get-etuovi-lot-data (apartments/get-hickup "http://www.etuovi.com/kohde/c34822"))

@@ -1,17 +1,15 @@
 (ns apartments-gui.server.main
   (:require [ring.adapter.jetty :as jetty]
             [apartments-gui.server.handler :as handler]
-            [apartments-gui.server.api :as api]
-            [environ.core :as environ])
+            [apartments-gui.server.api :as api])
   (:gen-class))
 
 (def default-port 4011)
 
 (defn -main [& [port]]
+  (println "starting in port " default-port)
   (api/load-state)
-  (jetty/run-jetty handler/app {:port (Integer. (or port
-                                                    (environ/env :port)
-                                                    default-port))}))
+  (jetty/run-jetty handler/app {:port default-port}))
 
 ;; development
 

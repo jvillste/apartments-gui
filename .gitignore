@@ -1,3 +1,6 @@
 /server/state.edn
 /.DS_Store
 /server/apartments-gui.server.iml
+/ui/checkouts/cor
+/server/apartments.edn
+/server/resources/public/js/compiled

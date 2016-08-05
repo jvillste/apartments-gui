@@ -8,7 +8,8 @@
                  [com.rpl/specter "0.9.2"]
                  [org.clojure/core.async "0.2.374"]
                  [cljs-http "0.1.40"]
-                 [secretary "1.2.3"]]
+                 [secretary "1.2.3"]
+                 [cor "0.1.0-SNAPSHOT"]]
 
   :min-lein-version "2.5.3"
 
@@ -26,7 +27,7 @@
   :garden {:builds [{:id "screen"
                      :source-paths ["src/clj"]
                      :stylesheet apartments-gui.ui.css/screen
-                     :compiler {:output-to "resources/public/css/compiled/screen.css"
+                     :compiler {:output-to "../server/resources/public/css/compiled/screen.css"
                                 :pretty-print? true}}]}
 
   :figwheel {:css-dirs ["resources/public/css"]
@@ -38,11 +39,11 @@
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
   
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src/cljs"]
+                        :source-paths ["src/cljs" "dev"]
                         :figwheel {:on-jsload "apartments-gui.ui.core/main"}
                         :compiler {:main apartments-gui.ui.core
-                                   :output-to "resources/public/js/compiled/app.js"
-                                   :output-dir "resources/public/js/compiled/out"
+                                   :output-to "../server/resources/public/js/compiled/app.js"
+                                   :output-dir "../server/resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
                                    :source-map-timestamp true}}
 
@@ -53,8 +54,8 @@
                                    :optimizations :none}}
 
                        {:id "min"
-                        :source-paths ["src/cljs"]
+                        :source-paths ["src/cljs" "prod"]
                         :compiler {:main apartments-gui.ui.core
-                                   :output-to "resources/public/js/compiled/app.js"
+                                   :output-to "../server/resources/public/js/compiled/app.js"
                                    :optimizations :advanced
                                    :pretty-print false}}]})

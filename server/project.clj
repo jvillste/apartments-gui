@@ -10,6 +10,7 @@
                  [datascript "0.15.0"]
                  [environ "1.0.0"]
                  [apartments "0.1.0-SNAPSHOT"]
+                 [cor "0.1.0-SNAPSHOT"]
                  [org.clojure/core.async "0.2.385"]]
   :plugins [[lein-ring "0.9.7"]]
   :aot [apartments-gui.server.main]
