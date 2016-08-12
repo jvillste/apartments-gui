@@ -1,23 +1,27 @@
 (ns apartments-gui.server.main
-  (:require [ring.adapter.jetty :as jetty]
-            [apartments-gui.server.handler :as handler]
-            [apartments-gui.server.api :as api])
+  (:require [apartments-gui.server.api :as api]
+            [cor.server :as server]
+            [cor.api :as cor-api])
   (:gen-class))
 
 (def default-port 4011)
 
-(defn -main [& [port]]
+(def state-file-name "apartments.edn")
+
+(defn load-state []
+  (-> (read-string (slurp state-file-name))
+      (assoc :state-file-name state-file-name)))
+
+(defn start-server []
   (println "starting in port " default-port)
-  (api/load-state)
-  (jetty/run-jetty handler/app {:port default-port}))
+  (server/start-server (cor-api/app (load-state)
+                                    'apartments-gui.server.api)
+                       default-port))
+
+(defn -main [& [port]]
+  (start-server))
 
 ;; development
 
-(def server (atom nil))
-
 (defn start []
-  (api/load-state)
-  (println "starting in port " default-port)
-  (when @server (.stop @server))
-  (reset! server
-          (jetty/run-jetty handler/app {:port default-port :join? false})))
+  (start-server))

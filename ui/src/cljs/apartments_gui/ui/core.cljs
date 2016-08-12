@@ -4,11 +4,9 @@
             [cljs.test :refer-macros [deftest is testing run-tests]]
             [cljs.core.async :as async]
             [cljs.pprint :as pprint]
-            [cljs-http.client :as http]
-            [apartments-gui.ui.routing :as routing]
-            [apartments-gui.ui.ui :as ui]
             [secretary.core :as secretary]
-            [cor.api :as cor-api])
+            [cor.api :as cor-api]
+            [cor.routing :as routing])
   (:require-macros [cljs.core.async.macros :as async]))
 
 (enable-console-print!)
@@ -25,13 +23,13 @@
 
 (defn load [transaction-channel]
   (cor-api/call-and-apply-to-state transaction-channel
-                              [:get-state]
-                              (fn [result state]
-                                (assoc state :state result))))
+                                   [:get-state]
+                                   (fn [result state]
+                                     (assoc state :state result))))
 
 (defn assoc-in-server-state [path value]
   (cor-api/call [:assoc-in-state path value]
-           (fn [result])))
+                (fn [result])))
 
 (defn text-editor [attributes transaction-channel path on-change state]
   [:textarea (conj attributes
@@ -40,8 +38,8 @@
                                  (let [value (.-value (.-target e))]
                                    (on-change value)
                                    (cor-api/apply-to-state transaction-channel
-                                                      (fn [state]
-                                                        (assoc-in state path value)))))})])
+                                                           (fn [state]
+                                                             (assoc-in state path value)))))})])
 
 (defn comment-editor [transaction-channel state id]
   (text-editor {:rows 1
@@ -60,8 +58,8 @@
                         (let [value (.-checked (.-target e))]
                           (assoc-in-server-state [:possible id] value)
                           (cor-api/apply-to-state transaction-channel
-                                             (fn [state]
-                                               (assoc-in state [:state :possible id] value)))))}])
+                                                  (fn [state]
+                                                    (assoc-in state [:state :possible id] value)))))}])
 
 (defn lot-table [transaction-channel ids state]
   (when (not (empty? (:state state)))
@@ -95,18 +93,15 @@
            [:td (comment-editor transaction-channel state id)]
            [:td (possible-editor transaction-channel server-state id)]])]])))
 
-(defn page []
-  
-  (async/go-loop []
-    (when-let [command (async/<! (:transaction-channel @cor-api/state-atom))]
-      (swap! cor-api/state-atom command)
-      (recur)))
+(defonce state-atom (cor-api/create-state-atom))
 
-  (load (:transaction-channel @cor-api/state-atom))
+(defn page []
+
+  (load (:transaction-channel @state-atom))
   
   (fn []
 
-    (let [state @cor-api/state-atom
+    (let [state @state-atom
           transaction-channel (:transaction-channel state)]
       [:div
 
