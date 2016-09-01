@@ -140,14 +140,21 @@
           (get-oikotie-section hickup "Hintatiedot ja muut kustannukset")
           (get-oikotie-section hickup "Talon ja tontin tiedot"))))
 
-(defn get-oikotie-lot-ids []
-  (-> "http://asunnot.oikotie.fi/api/cards?cardType=104&limit=1000&locations=%5B%5B65,6,%22Vantaa%22%5D%5D&offset=0&sortBy=published_desc"
+#_(get-oikotie-data "http://asunnot.oikotie.fi/myytavat-tontit/13405809")
+
+
+
+
+(defn get-oikotie-lot-ids [query-url]
+  (-> query-url
       (http/get)
       (:body)
       (json/read-str)
       (get "cards")
       (->> (map (fn [item]
                   (get item "id"))))))
+
+#_ (get-oikotie-lot-ids)
 
 
 (defn get-sections [hickup section-getter & section-names]

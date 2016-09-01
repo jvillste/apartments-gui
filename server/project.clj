@@ -6,6 +6,6 @@
                  [clj-http "3.1.0"]
                  [hickory "0.5.4"]
                  [org.clojure/data.json "0.2.6"]]
-  :aot [apartments-gui.server.main]
+  
   :main apartments-gui.server.main
   :uberjar-name "apartments-gui.server.jar")
