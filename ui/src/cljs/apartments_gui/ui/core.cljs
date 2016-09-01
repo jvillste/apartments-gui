@@ -9,6 +9,7 @@
             [cor.state :as state]
             [cor.routing :as routing]
             [cor.string :as string]
+            [cor.web-socket :as web-socket]
             [clojure.string :as clojure-string])
   (:require-macros [cljs.core.async.macros :as async]))
 
@@ -296,6 +297,20 @@
   (reagent/render-component [page] (.-body js/document)))
 
 
+(def channel-socket (web-socket/create-channel-socket "/chsk"))
+
+(web-socket/handle-messages channel-socket
+                            (fn [type arguments]
+                              (case type
+                                
+                                :apartments/assoc-in-state
+                                (let [[path value] arguments]
+                                  (println value (concat [:state] path) (get-in @state-atom (concat [:state] path)))
+                                  (state/apply-to-state (:transaction-channel @state-atom)
+                                                        (fn [state]
+                                                          (assoc-in state (concat [:state] path) value))))
+                                
+                                nil)))
 
 (run-tests (cljs.test/empty-env :cljs.test/pprint))
 

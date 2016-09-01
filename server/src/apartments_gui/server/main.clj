@@ -47,14 +47,14 @@
                               "3" "bar"}}))))
 
 (defn load-state []
-  (-> (read-string (slurp state-file-name))
+  (-> {:persistent-state (-> (read-string (slurp state-file-name))
+                             (migrate))} 
       (assoc :state-file-name state-file-name)))
 
 (defn start-server []
   (println "starting in port " default-port)
-  (server/start-server (cor-api/app (-> (load-state)
-                                        (migrate))
-                                    'apartments-gui.server.api)
+  (server/start-server (cor-api/app-with-web-socket (load-state)
+                                                    'apartments-gui.server.api)
                        default-port))
 
 (defn -main [& [port]]
