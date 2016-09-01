@@ -63,9 +63,9 @@
   (cor-api/call [:assoc-in-state path value]
                 (fn [result])))
 
-(defn text-editor [attributes transaction-channel path on-change state]
+(defn text-editor-view [attributes transaction-channel path on-change value]
   [:textarea (conj attributes
-                   {:value (get-in state path)
+                   {:value value
                     :on-change (fn [e]
                                  (let [value (.-value (.-target e))]
                                    (on-change value)
@@ -73,15 +73,24 @@
                                                          (fn [state]
                                                            (assoc-in state path value)))))})])
 
+(defn text-editor [attributes transaction-channel path on-change state]
+  [text-editor-view
+   attributes
+   transaction-channel
+   path
+   on-change
+   (get-in state path)])
+
 (defn comment-editor [transaction-channel source state id]
-  (text-editor {:rows 1
-                :cols 80}
-               transaction-channel
-               [:state source :comments id]
-               (fn [new-value]
-                 (assoc-in-server-state [source :comments id]
-                                        new-value))
-               state))
+  [text-editor-view
+   {:rows 1
+    :cols 80}
+   transaction-channel
+   [:state source :comments id]
+   (fn [new-value]
+     (assoc-in-server-state [source :comments id]
+                            new-value))
+   (get-in state [:state source :comments id])])
 
 (defn new-rating [current-rating rating checked]
   (if checked
@@ -91,34 +100,40 @@
       rating
       (dec rating))))
 
-(defn rating-checkbox [transaction-channel source state id rating]
-  (let [current-rating (or (get-in state [:state source :ratings id])
-                           0)]
-    [:input {:type "checkbox"
-             :checked (>= current-rating
-                          rating)
-             :on-change (fn [e]
-                          (let [value (.-checked (.-target e))
-                                new-rating (new-rating current-rating
-                                                       rating
-                                                       value)]
-                            (assoc-in-server-state [source :ratings id] new-rating)
-                            
-                            (state/apply-to-state transaction-channel
-                                                  (fn [state]
-                                                    (assoc-in state [:state source :ratings id] new-rating)))))}]))
+(defn rating-checkbox [transaction-channel source current-rating id rating]
+  [:input {:type "checkbox"
+           :checked (>= current-rating
+                        rating)
+           :on-change (fn [e]
+                        (let [value (.-checked (.-target e))
+                              new-rating (new-rating current-rating
+                                                     rating
+                                                     value)]
+                          (assoc-in-server-state [source :ratings id] new-rating)
+                          
+                          (state/apply-to-state transaction-channel
+                                                (fn [state]
+                                                  (assoc-in state [:state source :ratings id] new-rating)))))}])
+
+(defn rating-editor-view [transaction-channel source current-rating id]
+  [:div (for [rating (range 1 6)]
+          [rating-checkbox transaction-channel source current-rating id rating])])
 
 (defn rating-editor [transaction-channel source state id]
-  [:div (for [rating (range 1 6)]
-          [rating-checkbox transaction-channel source state id rating])])
+  [rating-editor-view
+   transaction-channel
+   :etuovi
+   (or (get-in state [:state source :ratings id])
+       0)
+   id])
 
 (defn background-color [rating]
   (get ["white"
-        "#eeffee"
-        "#60ff6a"
-        "#50ff6a"
-        "#20ff6a"
-        "#00ff6a"]
+        "#d0ffd0"
+        "#a0ffa0"
+        "#90ff90"
+        "#70ff70"
+        "#00ff00"]
        rating))
 
 (defn lot-table [transaction-channel ids state]
@@ -134,7 +149,10 @@
          [:th "hinta"]
          (for [column data-columns]
            [:th {:key column}
-            (str column)])]
+            (str column)])
+         [:th "kommentit"]
+         [:th "arvosana"]
+         [:th "käyty"]]
         (for [id ids]
           [:tr {:key id
                 :style {:background-color (background-color (or (get-in server-state [:etuovi :ratings id])
@@ -150,9 +168,14 @@
                    :style {:white-space "nowrap"}}
               (string/substring (str (get-in server-state [:data id column]))
                                 0 60)])
-           [:td (comment-editor transaction-channel :etuovi state id)]
-           [:td (rating-editor transaction-channel :etuovi state id)]])]])))
-
+           [:td (comment-editor transaction-channel
+                                :etuovi
+                                state
+                                id)]
+           [:td (rating-editor transaction-channel
+                               :etuovi
+                               state
+                               id)]])]])))
 
 
 (defn oikotie-lot-table [transaction-channel ids state]
@@ -222,23 +245,20 @@
                     transaction-channel
                     [:state :oikotie-query-url]
                     (fn [new-value]
-                      (assoc-in-server-state [:oikotie-query-url] new-value)
-                      #_(set-comment id new-value))
+                      (assoc-in-server-state [:oikotie-query-url] new-value))
                     state)
        
        (oikotie-lot-table transaction-channel
                           (-> state :unique-oikotie-ids)
                           state)
 
-       
        [:h1 "Etuovi"]
        (text-editor {:rows 1
                      :cols 200}
                     transaction-channel
                     [:state :etuovi-query-url]
                     (fn [new-value]
-                      (assoc-in-server-state [:etuovi-query-url] new-value)
-                      #_(set-comment id new-value))
+                      (assoc-in-server-state [:etuovi-query-url] new-value))
                     state)
        
        (lot-table transaction-channel
@@ -247,17 +267,17 @@
 
        [:h1 "Poistuneet Oikotiestä"]
        
-       (lot-table transaction-channel
-                  (clojure.set/difference (apply hash-set
-                                                 (keys (-> state :state :oikotie-comments)))
-                                          (apply hash-set (-> state :state :oikotie-ids)))
-                  state)
+       (oikotie-lot-table transaction-channel
+                          (clojure.set/difference (apply hash-set
+                                                         (keys (-> state :state :oikotie :comments)))
+                                                  (apply hash-set (-> state :state :oikotie-ids)))
+                          state)
        
        [:h1 "Poistuneet Etuovesta"]
        
        (lot-table transaction-channel
                   (clojure.set/difference (apply hash-set
-                                                 (keys (-> state :state :comments)))
+                                                 (keys (-> state :state :etuovi :comments)))
                                           (apply hash-set (-> state :state :ids)))
                   state)])))
 
